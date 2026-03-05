@@ -1,0 +1,63 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║                  🚀 QUICK DEPLOYMENT REFERENCE                          ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+📍 CURRENT STATUS: Ready to deploy!
+📁 Location: /Users/peterngigi/extract contacts/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔗 STEP 1: PUSH TO GITHUB (5 minutes)
+
+1. Create repo: https://github.com/new
+   Name: whatsapp-contact-exporter
+
+2. Run these commands:
+
+cd "/Users/peterngigi/extract contacts"
+git remote add origin https://github.com/YOUR_USERNAME/whatsapp-contact-exporter.git
+git branch -M main
+git push -u origin main
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 STEP 2: DEPLOY TO VERCEL (3 minutes)
+
+1. Go to: https://vercel.com/new
+2. Import your GitHub repo
+3. Settings:
+   - Framework: Other
+   - Output Directory: public
+4. Click "Deploy"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 STEP 3: CUSTOM DOMAIN (2 minutes)
+
+In Vercel:
+1. Settings → Domains
+2. Add: extensions.pewang.company
+3. Update DNS:
+   CNAME: extensions → cname.vercel-dns.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ RESULT:
+
+Your site will be live at:
+  🌐 https://extensions.pewang.company/wa
+
+Users can:
+  📥 Download extension
+  📖 Read documentation
+  🔗 View on GitHub
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 FULL GUIDE: See DEPLOYMENT.md for detailed instructions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Total Time: ~10 minutes
