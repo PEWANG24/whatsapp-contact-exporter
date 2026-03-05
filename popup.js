@@ -17,11 +17,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Ensure content script is injected
+  async function ensureContentScript() {
+    try {
+      // Try to ping the content script
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'checkWhatsApp' });
+      return response;
+    } catch (error) {
+      // Content script not loaded, inject it
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content.js']
+        });
+        // Wait a bit for the script to initialize
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return await chrome.tabs.sendMessage(tab.id, { action: 'checkWhatsApp' });
+      } catch (injectError) {
+        console.error('Failed to inject content script:', injectError);
+        return null;
+      }
+    }
+  }
+
   // Check if WhatsApp is loaded
-  chrome.tabs.sendMessage(tab.id, { action: 'checkWhatsApp' }, (response) => {
-    if (chrome.runtime.lastError || !response || !response.isLoaded) {
+  ensureContentScript().then(response => {
+    if (!response || !response.isLoaded) {
       showStatus('Please wait for WhatsApp Web to fully load...', 'warning');
     }
+  }).catch(error => {
+    showStatus('Error: Could not connect to WhatsApp Web. Please refresh the page.', 'error');
   });
 
   extractBtn.addEventListener('click', async () => {
@@ -51,14 +76,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+      // Ensure content script is loaded
+      await ensureContentScript();
+
       // Scroll first if option is selected
       if (scrollFirstCheckbox.checked) {
         showStatus('Scrolling to load all chats...', 'info');
         
         // Scroll multiple times to load all chats
         for (let i = 0; i < 5; i++) {
-          await chrome.tabs.sendMessage(tab.id, { action: 'scrollChatList' });
-          await sleep(800);
+          try {
+            await chrome.tabs.sendMessage(tab.id, { action: 'scrollChatList' });
+            await sleep(800);
+          } catch (error) {
+            console.error('Scroll error:', error);
+          }
         }
         
         await sleep(1000);
@@ -66,13 +98,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       showStatus('Extracting contacts...', 'info');
 
-      chrome.tabs.sendMessage(tab.id, { action: 'extractContacts' }, (response) => {
-        if (chrome.runtime.lastError) {
-          showStatus('Error: ' + chrome.runtime.lastError.message, 'error');
-          resetButton();
-          return;
-        }
-
+      try {
+        const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractContacts' });
+        
         if (!response.success) {
           showStatus('Error: ' + response.error, 'error');
           resetButton();
@@ -95,7 +123,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         showStatus(`Successfully extracted ${extractedContacts.length} contacts!`, 'success');
         displayResults();
         resetButton();
-      });
+      } catch (error) {
+        showStatus('Error: ' + (error.message || 'Could not connect to WhatsApp Web'), 'error');
+        resetButton();
+      }
 
     } catch (error) {
       showStatus('Error: ' + error.message, 'error');

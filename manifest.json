@@ -5,7 +5,9 @@
   "description": "Export all contacts from WhatsApp Web chats to CSV or JSON",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "https://web.whatsapp.com/*"
@@ -22,7 +24,8 @@
     {
       "matches": ["https://web.whatsapp.com/*"],
       "js": ["content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": false
     }
   ],
   "background": {
