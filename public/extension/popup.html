@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Contact Exporter</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📱 WhatsApp Contact Exporter</h1>
+      <p class="subtitle">Export all your WhatsApp contacts</p>
+    </div>
+
+    <div id="status" class="status hidden"></div>
+
+    <div id="notWhatsApp" class="warning hidden">
+      <p>⚠️ Please open WhatsApp Web first!</p>
+      <p class="small">Navigate to <a href="https://web.whatsapp.com" target="_blank">web.whatsapp.com</a></p>
+    </div>
+
+    <div id="mainContent" class="main-content">
+      <div class="info-box">
+        <p>This extension will extract contact names and phone numbers from all your WhatsApp chats.</p>
+      </div>
+
+      <div class="options">
+        <label class="checkbox-label">
+          <input type="checkbox" id="includeGroups" checked>
+          <span>Include group chats</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="scrollFirst">
+          <span>Scroll to load all chats first (recommended)</span>
+        </label>
+      </div>
+
+      <div class="button-group">
+        <button id="extractBtn" class="btn btn-primary">
+          <span class="btn-text">Extract Contacts</span>
+          <span class="btn-loader hidden">⏳</span>
+        </button>
+      </div>
+
+      <div id="results" class="results hidden">
+        <div class="results-header">
+          <h3>Results</h3>
+          <p id="resultCount"></p>
+        </div>
+        
+        <div class="export-buttons">
+          <button id="exportCsvBtn" class="btn btn-secondary">
+            📄 Export as CSV
+          </button>
+          <button id="exportJsonBtn" class="btn btn-secondary">
+            📋 Export as JSON
+          </button>
+          <button id="copyBtn" class="btn btn-secondary">
+            📋 Copy to Clipboard
+          </button>
+        </div>
+
+        <div class="preview">
+          <h4>Preview (first 10 contacts):</h4>
+          <div id="previewList" class="preview-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p class="small">Made with ❤️ for WhatsApp users</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

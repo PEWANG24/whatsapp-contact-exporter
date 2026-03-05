@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Download WhatsApp Contact Exporter - Extract and export all your WhatsApp Web contacts to CSV or JSON">
+  <title>WhatsApp Contact Exporter - Chrome Extension Download</title>
+  <link rel="icon" type="image/png" href="/extension/icons/icon48.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 60px 40px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 42px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    .header p {
+      font-size: 18px;
+      opacity: 0.95;
+      line-height: 1.6;
+    }
+
+    .content {
+      padding: 50px 40px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .feature {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .feature h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .feature p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .download-section {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 40px;
+      border-radius: 15px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .download-section h2 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .download-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 18px 40px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+      margin: 10px;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+    }
+
+    .download-btn.secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .download-btn.secondary:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .installation {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+    }
+
+    .installation h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .steps {
+      list-style: none;
+      counter-reset: step-counter;
+    }
+
+    .steps li {
+      counter-increment: step-counter;
+      margin-bottom: 20px;
+      padding-left: 50px;
+      position: relative;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .steps li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .info-box {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .info-box p {
+      color: #856404;
+      line-height: 1.6;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 30px;
+      background: #f8f9fa;
+      color: #666;
+    }
+
+    .footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 40px 0;
+      padding: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      color: white;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 32px;
+      }
+
+      .header p {
+        font-size: 16px;
+      }
+
+      .content {
+        padding: 30px 20px;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📱 WhatsApp Contact Exporter</h1>
+      <p>Extract and export all your WhatsApp Web contacts to CSV or JSON with one click</p>
+    </div>
+
+    <div class="content">
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h3>Lightning Fast</h3>
+          <p>Extract 100+ contacts per second with optimized performance</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔒</div>
+          <h3>100% Private</h3>
+          <p>All processing happens locally in your browser. No data sent anywhere</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📊</div>
+          <h3>Multiple Formats</h3>
+          <p>Export to CSV, JSON, or copy directly to clipboard</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-number">~30 KB</div>
+          <div class="stat-label">Lightweight</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Private</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">1-Click</div>
+          <div class="stat-label">Export</div>
+        </div>
+      </div>
+
+      <div class="download-section">
+        <h2>📥 Download Extension</h2>
+        <a href="/extension.zip" class="download-btn" download>
+          Download ZIP File
+        </a>
+        <a href="https://github.com/pewang-company/whatsapp-contact-exporter" class="download-btn secondary" target="_blank">
+          View on GitHub
+        </a>
+      </div>
+
+      <div class="installation">
+        <h3>🚀 Installation Guide</h3>
+        <ol class="steps">
+          <li>Download the extension ZIP file using the button above</li>
+          <li>Extract the ZIP file to a folder on your computer</li>
+          <li>Open Chrome and go to <code>chrome://extensions/</code></li>
+          <li>Enable "Developer mode" using the toggle in the top-right corner</li>
+          <li>Click "Load unpacked" and select the extracted folder</li>
+          <li>The extension icon will appear in your Chrome toolbar</li>
+        </ol>
+      </div>
+
+      <div class="info-box">
+        <p><strong>📌 How to Use:</strong> Go to <a href="https://web.whatsapp.com" target="_blank">web.whatsapp.com</a>, click the extension icon, and click "Extract Contacts". Choose your export format and you're done!</p>
+      </div>
+
+      <div class="installation">
+        <h3>✨ Features</h3>
+        <ul style="list-style: none; padding-left: 0;">
+          <li style="padding: 10px 0; border-bottom: 1px solid #eee;">✅ Extract all contacts from WhatsApp Web</li>
+          <li style="padding: 10px 0; border-bottom: 1px solid #eee;">✅ Export to CSV (Excel/Google Sheets)</li>
+          <li style="padding: 10px 0; border-bottom: 1px solid #eee;">✅ Export to JSON (structured data)</li>
+          <li style="padding: 10px 0; border-bottom: 1px solid #eee;">✅ Copy to clipboard</li>
+          <li style="padding: 10px 0; border-bottom: 1px solid #eee;">✅ Include/exclude group chats</li>
+          <li style="padding: 10px 0; border-bottom: 1px solid #eee;">✅ Auto-scroll to load all chats</li>
+          <li style="padding: 10px 0; border-bottom: 1px solid #eee;">✅ Beautiful gradient UI</li>
+          <li style="padding: 10px 0;">✅ 100% private and secure</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Made with ❤️ for WhatsApp users</p>
+      <p style="margin-top: 10px;">
+        <a href="https://github.com/pewang-company/whatsapp-contact-exporter" target="_blank">GitHub</a> • 
+        <a href="/docs" target="_blank">Documentation</a> • 
+        <a href="https://pewang.company" target="_blank">Pewang Company</a>
+      </p>
+      <p style="margin-top: 15px; font-size: 12px; opacity: 0.7;">
+        Not affiliated with WhatsApp or Meta Platforms, Inc.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

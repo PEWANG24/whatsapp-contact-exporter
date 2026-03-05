@@ -1,0 +1,71 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║     📱 WHATSAPP CONTACT EXPORTER - QUICK START GUIDE        ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ ALL FILES ARE READY! Icons have been generated.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 INSTALLATION (3 Simple Steps):
+
+1. Open Chrome and go to: chrome://extensions/
+
+2. Enable "Developer mode" (toggle in top-right corner)
+
+3. Click "Load unpacked" → Select this folder → Done!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 HOW TO USE:
+
+1. Go to: https://web.whatsapp.com
+   
+2. Click the extension icon in Chrome toolbar
+   
+3. Click "Extract Contacts" button
+   
+4. Choose export format:
+   • CSV (for Excel/Sheets)
+   • JSON (for developers)
+   • Copy to clipboard
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 FILES INCLUDED:
+
+✓ manifest.json       - Extension configuration
+✓ content.js          - Contact extraction logic
+✓ popup.html          - User interface
+✓ popup.js            - UI functionality
+✓ popup.css           - Styling
+✓ background.js       - Background worker
+✓ icons/              - Extension icons (16, 48, 128px)
+✓ README.md           - Detailed documentation
+✓ INSTALLATION.md     - Step-by-step guide
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔒 PRIVACY:
+
+• 100% local processing
+• No data sent to external servers
+• No permanent storage
+• Open source code
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 TIPS:
+
+• Enable "Scroll to load all chats first" for complete extraction
+• Works best when WhatsApp Web is fully loaded
+• Can export hundreds of contacts in seconds
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 READY TO GO!
+
+For detailed instructions, see INSTALLATION.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

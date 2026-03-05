@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation - WhatsApp Contact Exporter</title>
+  <link rel="icon" type="image/png" href="/extension/icons/icon48.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f7fa;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .doc-section {
+      background: white;
+      padding: 30px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .doc-section h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    .doc-section h3 {
+      color: #333;
+      margin: 25px 0 15px 0;
+      font-size: 20px;
+    }
+
+    .doc-section p {
+      margin-bottom: 15px;
+    }
+
+    .doc-section ul, .doc-section ol {
+      margin-left: 30px;
+      margin-bottom: 15px;
+    }
+
+    .doc-section li {
+      margin-bottom: 10px;
+    }
+
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      color: #e83e8c;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+
+    pre code {
+      background: none;
+      color: #f8f8f2;
+      padding: 0;
+    }
+
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 30px;
+      border-radius: 25px;
+      text-decoration: none;
+      margin: 10px 5px;
+      transition: transform 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+
+    .info {
+      background: #d1ecf1;
+      border-left: 4px solid #17a2b8;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+
+    .success {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📚 Documentation</h1>
+    <p>Complete guide to WhatsApp Contact Exporter</p>
+  </div>
+
+  <div class="container">
+    <div class="doc-section">
+      <h2>🚀 Quick Start</h2>
+      <p>Get started with WhatsApp Contact Exporter in just a few minutes.</p>
+      
+      <h3>Installation</h3>
+      <ol>
+        <li>Download the extension from <a href="/">the homepage</a></li>
+        <li>Extract the ZIP file to a folder</li>
+        <li>Open Chrome and go to <code>chrome://extensions/</code></li>
+        <li>Enable "Developer mode"</li>
+        <li>Click "Load unpacked" and select the folder</li>
+      </ol>
+
+      <h3>First Use</h3>
+      <ol>
+        <li>Go to <a href="https://web.whatsapp.com" target="_blank">web.whatsapp.com</a></li>
+        <li>Click the extension icon in your toolbar</li>
+        <li>Click "Extract Contacts"</li>
+        <li>Choose your export format (CSV, JSON, or Clipboard)</li>
+      </ol>
+    </div>
+
+    <div class="doc-section">
+      <h2>📖 Features</h2>
+      
+      <h3>Contact Extraction</h3>
+      <p>The extension extracts the following information for each contact:</p>
+      <ul>
+        <li><strong>Name</strong> - Contact or group name</li>
+        <li><strong>Phone Number</strong> - When available (may show "N/A" for saved contacts)</li>
+        <li><strong>Group Status</strong> - Whether it's a group chat or individual</li>
+        <li><strong>Last Message</strong> - Preview of the most recent message</li>
+        <li><strong>Timestamp</strong> - When the last message was sent</li>
+      </ul>
+
+      <h3>Export Formats</h3>
+      
+      <h4>CSV (Comma-Separated Values)</h4>
+      <p>Perfect for spreadsheet applications like Excel or Google Sheets.</p>
+      <pre><code>Name,Phone Number,Is Group,Last Message,Timestamp
+John Doe,+1234567890,No,Hey there!,10:30 AM
+Family Group,N/A,Yes,See you tomorrow,Yesterday</code></pre>
+
+      <h4>JSON (JavaScript Object Notation)</h4>
+      <p>Structured data format ideal for developers and database imports.</p>
+      <pre><code>[
+  {
+    "name": "John Doe",
+    "phoneNumber": "+1234567890",
+    "isGroup": false,
+    "lastMessage": "Hey there!",
+    "timestamp": "10:30 AM",
+    "index": 1
+  }
+]</code></pre>
+
+      <h4>Clipboard</h4>
+      <p>Tab-separated format for quick pasting into documents.</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>⚙️ Options</h2>
+      
+      <h3>Include Group Chats</h3>
+      <p>Toggle whether to include group conversations in the export. Enabled by default.</p>
+
+      <h3>Scroll to Load All Chats</h3>
+      <p>Automatically scrolls through your chat list to ensure all contacts are loaded before extraction. Recommended for large contact lists (100+ chats).</p>
+    </div>
+
+    <div class="doc-section">
+      <h2>🔒 Privacy & Security</h2>
+      
+      <div class="success">
+        <strong>100% Private:</strong> All processing happens locally in your browser. No data is ever sent to external servers.
+      </div>
+
+      <h3>What We Access</h3>
+      <ul>
+        <li>WhatsApp Web chat list (only when you click "Extract")</li>
+        <li>Contact names and phone numbers visible on the page</li>
+        <li>Last message previews (already visible in chat list)</li>
+      </ul>
+
+      <h3>What We DON'T Access</h3>
+      <ul>
+        <li>Message content (beyond what's visible in previews)</li>
+        <li>Media files (photos, videos, documents)</li>
+        <li>Your phone number or account details</li>
+        <li>Any data from other websites</li>
+      </ul>
+
+      <h3>Permissions</h3>
+      <ul>
+        <li><strong>activeTab</strong> - Read WhatsApp Web page when you use the extension</li>
+        <li><strong>storage</strong> - Save your preferences (less than 1 KB)</li>
+        <li><strong>web.whatsapp.com</strong> - Only works on WhatsApp Web</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>🐛 Troubleshooting</h2>
+      
+      <h3>Extension Not Appearing</h3>
+      <div class="info">
+        <strong>Solution:</strong> Make sure Developer mode is enabled in <code>chrome://extensions/</code>. Try reloading the extension or restarting Chrome.
+      </div>
+
+      <h3>No Contacts Found</h3>
+      <div class="info">
+        <strong>Solution:</strong> Enable "Scroll to load all chats first" option. Make sure you're logged into WhatsApp Web and have active conversations.
+      </div>
+
+      <h3>Phone Numbers Show "N/A"</h3>
+      <div class="warning">
+        <strong>Note:</strong> This is normal for saved contacts. WhatsApp Web shows contact names instead of phone numbers. Unsaved contacts will display their phone numbers.
+      </div>
+
+      <h3>Extraction Seems Incomplete</h3>
+      <div class="info">
+        <strong>Solution:</strong> Enable auto-scroll option and wait for it to complete. For very large contact lists (500+), you may need to manually scroll first.
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <h2>💡 Tips & Best Practices</h2>
+      
+      <ul>
+        <li><strong>Before extracting:</strong> Scroll through your chat list to load all contacts, or enable the auto-scroll option</li>
+        <li><strong>For large lists:</strong> Enable "Scroll to load all chats first" and be patient (may take 30-60 seconds)</li>
+        <li><strong>Regular backups:</strong> Run the extraction periodically to keep your contact backup up-to-date</li>
+        <li><strong>CSV for spreadsheets:</strong> Use CSV format if you plan to open in Excel or Google Sheets</li>
+        <li><strong>JSON for developers:</strong> Use JSON format for database imports or custom processing</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>🔧 Technical Details</h2>
+      
+      <h3>Browser Compatibility</h3>
+      <ul>
+        <li>Google Chrome (latest version)</li>
+        <li>Microsoft Edge (Chromium-based)</li>
+        <li>Brave Browser</li>
+        <li>Any Chromium-based browser</li>
+      </ul>
+
+      <h3>Performance</h3>
+      <ul>
+        <li><strong>Extraction Speed:</strong> ~100-200 contacts per second</li>
+        <li><strong>Memory Usage:</strong> Less than 50 MB</li>
+        <li><strong>Extension Size:</strong> ~30 KB</li>
+      </ul>
+
+      <h3>Limitations</h3>
+      <ul>
+        <li>Only works on WhatsApp Web (not mobile app)</li>
+        <li>Phone numbers may not be available for all contacts</li>
+        <li>Group member details are not extracted (only group names)</li>
+        <li>Requires active WhatsApp Web session</li>
+      </ul>
+    </div>
+
+    <div class="doc-section">
+      <h2>📞 Support</h2>
+      <p>Need help? Here are your options:</p>
+      <ul>
+        <li><strong>GitHub Issues:</strong> <a href="https://github.com/pewang-company/whatsapp-contact-exporter/issues" target="_blank">Report bugs or request features</a></li>
+        <li><strong>Documentation:</strong> You're reading it!</li>
+        <li><strong>Website:</strong> <a href="/">extensions.pewang.company/wa</a></li>
+      </ul>
+      
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="/" class="btn">← Back to Home</a>
+        <a href="https://github.com/pewang-company/whatsapp-contact-exporter" class="btn" target="_blank">View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
