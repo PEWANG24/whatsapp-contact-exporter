@@ -1,208 +1,219 @@
 // Content script for WhatsApp Web Contact Exporter
 
+// Query through Shadow DOM (WhatsApp Web may use it)
+function querySelectorAllDeep(selector, root = document) {
+  const result = [];
+  function walk(r) {
+    if (!r || !r.querySelectorAll) return;
+    try {
+      r.querySelectorAll(selector).forEach(el => result.push(el));
+      r.querySelectorAll('*').forEach(node => {
+        if (node.shadowRoot) walk(node.shadowRoot);
+      });
+    } catch (e) {}
+  }
+  walk(root);
+  return result;
+}
+
+function querySelectorDeep(selector, root = document) {
+  const all = querySelectorAllDeep(selector, root);
+  return all[0] || null;
+}
+
 function extractContacts() {
   const contacts = [];
   const processedNumbers = new Set();
 
-  console.log('Starting contact extraction...');
-  
-  // Method 1: Try to find the main chat container
-  let chatList = document.querySelector('#pane-side');
-  console.log('Method 1 - #pane-side:', chatList);
-  
+  console.log('WhatsApp Contact Exporter: Starting extraction...');
+
+  // Find chat list - try normal DOM first, then pierce shadow DOM
+  let chatList = document.querySelector('#pane-side') ||
+                 querySelectorDeep('#pane-side') ||
+                 document.querySelector('[aria-label="Chat list"]') ||
+                 querySelectorDeep('[aria-label="Chat list"]') ||
+                 querySelectorDeep('[data-testid="chat-list"]');
+
   if (!chatList) {
-    // Method 2: Look for aria-label
-    chatList = document.querySelector('[aria-label="Chat list"]');
-    console.log('Method 2 - aria-label Chat list:', chatList);
-  }
-  
-  if (!chatList) {
-    // Method 3: Look for the scrollable container
-    const scrollables = document.querySelectorAll('div[style*="overflow"]');
-    console.log('Method 3 - Found scrollable divs:', scrollables.length);
-    for (const el of scrollables) {
-      if (el.querySelectorAll('div[role="listitem"]').length > 0) {
-        chatList = el;
-        console.log('Method 3 - Found chat list in scrollable:', chatList);
-        break;
-      }
+    // Try finding by role or structure
+    const withListitems = querySelectorAllDeep('div[role="listitem"]');
+    if (withListitems.length > 0) {
+      chatList = withListitems[0].closest('div[role="listbox"]') ||
+                 withListitems[0].closest('div[role="grid"]') ||
+                 withListitems[0].parentElement?.parentElement;
+      console.log('Found chat list via listitem parent:', chatList);
     }
   }
-  
-  if (!chatList) {
-    // Method 4: Just get the whole left panel
-    chatList = document.querySelector('div[id^="app"] > div > div > div:first-child');
-    console.log('Method 4 - Left panel:', chatList);
-  }
 
   if (!chatList) {
-    console.error('Could not find chat list container');
+    console.error('Chat list not found. Document body children:', document.body?.children?.length);
     return {
       success: false,
-      error: 'WhatsApp chat list not found. Make sure you are on WhatsApp Web and logged in. Try refreshing the page.',
+      error: 'WhatsApp chat list not found. Make sure you are logged in and can see your chats. Try refreshing the page.',
       contacts: []
     };
   }
 
-  // Get all chat items - be very aggressive
-  let chatItems = Array.from(chatList.querySelectorAll('div[role="listitem"]'));
-  console.log('Found listitem elements:', chatItems.length);
-  
+  // Get chat rows - WhatsApp Web uses various patterns
+  let chatItems = [];
+
+  // Pattern 1: data-testid (modern WhatsApp Web)
+  chatItems = Array.from(chatList.querySelectorAll('[data-testid="cell-frame-container"]'));
   if (chatItems.length === 0) {
-    // Try to find divs that contain contact names
-    const allDivs = Array.from(chatList.querySelectorAll('div'));
-    chatItems = allDivs.filter(div => {
-      const spans = div.querySelectorAll('span');
-      return spans.length > 0 && div.querySelector('img, svg');
+    chatItems = Array.from(querySelectorAllDeep('[data-testid="cell-frame-container"]', chatList));
+  }
+
+  // Pattern 2: role="listitem"
+  if (chatItems.length === 0) {
+    chatItems = Array.from(chatList.querySelectorAll('div[role="listitem"]'));
+  }
+  if (chatItems.length === 0) {
+    chatItems = Array.from(querySelectorAllDeep('div[role="listitem"]', chatList));
+  }
+
+  // Pattern 3: focusable list item (tabindex="0" + focusable)
+  if (chatItems.length === 0) {
+    chatItems = Array.from(chatList.querySelectorAll('[tabindex="0"]'));
+    chatItems = chatItems.filter(el => {
+      const hasName = el.querySelector('span[dir="auto"]') || el.querySelector('[title]');
+      const hasAvatar = el.querySelector('img') || el.querySelector('canvas');
+      return hasName && (hasAvatar || el.querySelector('span'));
     });
-    console.log('Found divs with spans and images:', chatItems.length);
   }
 
+  // Pattern 4: divs that look like chat rows (avatar + text)
   if (chatItems.length === 0) {
-    console.error('No chat items found. DOM structure:', chatList.innerHTML.substring(0, 500));
+    const allDivs = chatList.querySelectorAll('div');
+    chatItems = Array.from(allDivs).filter(div => {
+      const hasImg = div.querySelector('img, canvas');
+      const spans = div.querySelectorAll('span');
+      const hasReasonableText = Array.from(spans).some(s => {
+        const t = s.textContent.trim();
+        return t.length >= 2 && t.length <= 80 && !/^\d{1,2}:\d{2}$/.test(t);
+      });
+      return hasImg && spans.length >= 1 && hasReasonableText;
+    });
+    // Prefer direct children of scroll container to avoid nested duplicates
+    if (chatItems.length > 1) {
+      const scrollParent = chatList.querySelector('[style*="overflow"]') || chatList;
+      const direct = Array.from(scrollParent.children).filter(c => c.querySelector('img, canvas'));
+      if (direct.length > 0) chatItems = direct;
+    }
+  }
+
+  console.log('Chat items found:', chatItems.length);
+
+  if (chatItems.length === 0) {
     return {
       success: false,
-      error: 'No chats found. Please make sure:\n1. You are logged into WhatsApp Web\n2. You can see your chats on the left side\n3. WhatsApp is fully loaded\n4. Try refreshing the page',
+      error: 'No chats found. Make sure:\n• You are logged into WhatsApp Web\n• Chats are visible on the left\n• The page has fully loaded\n• Try refreshing (F5)',
       contacts: []
     };
   }
-  
-  console.log('Processing', chatItems.length, 'chat items...');
 
   chatItems.forEach((chatItem, index) => {
     try {
       let name = null;
-      
-      // Method 1: Look for title attribute
-      const titleElements = chatItem.querySelectorAll('[title]');
-      for (const el of titleElements) {
-        const title = el.getAttribute('title');
-        if (title && title.length > 0 && title.length < 100) {
-          name = title;
+
+      // 1. title attribute (contact name tooltip)
+      const withTitle = chatItem.querySelectorAll('[title]');
+      for (const el of withTitle) {
+        const t = (el.getAttribute('title') || '').trim();
+        if (t.length > 0 && t.length < 100 && !/^\d{1,2}:\d{2}/.test(t)) {
+          name = t;
           break;
         }
       }
-      
-      // Method 2: Look for specific span with dir="auto"
+
+      // 2. span[dir="auto"] (common for names)
       if (!name) {
-        const autoSpan = chatItem.querySelector('span[dir="auto"]');
-        if (autoSpan) {
-          name = autoSpan.textContent.trim();
-        }
+        const auto = chatItem.querySelector('span[dir="auto"]');
+        if (auto) name = auto.textContent.trim();
       }
-      
-      // Method 3: Find the largest text content that looks like a name
+
+      // 3. First substantial span text
       if (!name) {
-        const allSpans = Array.from(chatItem.querySelectorAll('span'));
-        const candidates = allSpans
-          .map(span => span.textContent.trim())
-          .filter(text => text && text.length > 0 && text.length < 100 && !text.match(/^\d+:\d+/) && !text.match(/^[0-9]+$/));
-        
-        if (candidates.length > 0) {
-          // Get the longest text as it's likely the name
-          name = candidates.reduce((a, b) => a.length > b.length ? a : b);
+        const spans = chatItem.querySelectorAll('span');
+        for (const span of spans) {
+          const t = span.textContent.trim();
+          if (t.length >= 2 && t.length <= 80 && !/^\d{1,2}:\d{2}$/.test(t) && !/^\d+$/.test(t)) {
+            name = t;
+            break;
+          }
         }
       }
 
-      if (!name || name.length === 0) {
-        console.log('No name found for chat item', index, chatItem);
-        return;
-      }
-      
-      console.log('Found contact:', name);
+      if (!name) return;
 
-      // Try to extract phone number from various sources
-      let phoneNumber = null;
-      
-      // Method 1: Check if name is a phone number
-      const phoneRegex = /^\+?\d[\d\s\-\(\)]+$/;
-      if (phoneRegex.test(name)) {
-        phoneNumber = name.replace(/[\s\-\(\)]/g, '');
-      }
+      const identifier = name;
+      if (processedNumbers.has(identifier)) return;
+      processedNumbers.add(identifier);
 
-      // Method 2: Look for phone number in aria-label or other attributes
-      const ariaLabel = chatItem.getAttribute('aria-label') || '';
-      const phoneMatch = ariaLabel.match(/\+?\d[\d\s\-\(\)]{8,}/);
-      if (phoneMatch) {
-        phoneNumber = phoneMatch[0].replace(/[\s\-\(\)]/g, '');
+      let phoneNumber = /^\+?\d[\d\s\-\(\)]{8,}$/.test(name)
+        ? name.replace(/\D/g, '')
+        : null;
+      if (!phoneNumber) {
+        const aria = chatItem.getAttribute('aria-label') || '';
+        const match = aria.match(/\+?\d[\d\s\-\(\)]{8,}/);
+        if (match) phoneNumber = match[0].replace(/\D/g, '');
       }
 
-      // Extract last message preview (optional)
-      const lastMessageElement = chatItem.querySelector('span[dir="ltr"]') ||
-                                 chatItem.querySelector('[data-testid="last-msg-text"]');
-      const lastMessage = lastMessageElement ? lastMessageElement.textContent.trim() : '';
+      const lastMsgEl = chatItem.querySelector('span[dir="ltr"]') || chatItem.querySelector('[data-testid="last-msg-text"]');
+      const lastMessage = lastMsgEl ? lastMsgEl.textContent.trim().substring(0, 100) : '';
+      const timeEl = chatItem.querySelector('[data-testid="cell-frame-secondary"] span') || chatItem.querySelector('span[aria-label*="at"]');
+      const timestamp = timeEl ? timeEl.textContent.trim() : '';
+      const isGroup = !!chatItem.querySelector('[data-testid="default-group"], [data-icon="default-group"]') || /group/i.test(name);
 
-      // Extract timestamp (optional)
-      const timeElement = chatItem.querySelector('div[data-testid="cell-frame-secondary"] span') ||
-                         chatItem.querySelector('span[aria-label*="at"]');
-      const timestamp = timeElement ? timeElement.textContent.trim() : '';
-
-      // Check if it's a group
-      const isGroup = chatItem.querySelector('[data-testid="default-group"]') !== null ||
-                     chatItem.querySelector('[data-icon="default-group"]') !== null ||
-                     name.toLowerCase().includes('group');
-
-      // Create unique identifier
-      const identifier = phoneNumber || name;
-      
-      if (!processedNumbers.has(identifier)) {
-        processedNumbers.add(identifier);
-        
-        contacts.push({
-          name: name,
-          phoneNumber: phoneNumber || 'N/A',
-          isGroup: isGroup,
-          lastMessage: lastMessage.substring(0, 100),
-          timestamp: timestamp,
-          index: index + 1
-        });
-      }
-    } catch (error) {
-      console.error('Error processing chat item:', error);
+      contacts.push({
+        name,
+        phoneNumber: phoneNumber || 'N/A',
+        isGroup,
+        lastMessage,
+        timestamp,
+        index: index + 1
+      });
+    } catch (err) {
+      console.error('Error processing item:', err);
     }
   });
 
+  console.log('Extracted contacts:', contacts.length);
   return {
     success: true,
-    contacts: contacts,
+    contacts,
     totalChats: chatItems.length,
     extractedAt: new Date().toISOString()
   };
 }
 
 function scrollChatList() {
-  const chatList = document.querySelector('[aria-label="Chat list"]') || 
-                   document.querySelector('div[data-testid="chat-list"]') ||
-                   document.querySelector('#pane-side');
-  
+  const chatList = document.querySelector('#pane-side') ||
+                  querySelectorDeep('#pane-side') ||
+                  document.querySelector('[aria-label="Chat list"]');
   if (chatList) {
     chatList.scrollTop = chatList.scrollHeight;
   }
 }
 
-// Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractContacts') {
-    const result = extractContacts();
-    sendResponse(result);
+    try {
+      sendResponse(extractContacts());
+    } catch (e) {
+      sendResponse({ success: false, error: String(e.message), contacts: [] });
+    }
     return true;
   }
-  
   if (request.action === 'scrollChatList') {
     scrollChatList();
     sendResponse({ success: true });
     return true;
   }
-  
   if (request.action === 'checkWhatsApp') {
     const isWhatsApp = window.location.hostname === 'web.whatsapp.com';
-    const isLoaded = document.querySelector('[aria-label="Chat list"]') !== null ||
-                    document.querySelector('#pane-side') !== null;
-    
-    sendResponse({ 
-      isWhatsApp: isWhatsApp,
-      isLoaded: isLoaded
-    });
+    const hasPane = !!document.querySelector('#pane-side') || !!querySelectorDeep('#pane-side');
+    const hasList = !!document.querySelector('[aria-label="Chat list"]');
+    sendResponse({ isWhatsApp, isLoaded: hasPane || hasList });
     return true;
   }
 });
