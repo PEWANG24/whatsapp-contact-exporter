@@ -4,10 +4,15 @@ function extractContacts() {
   const contacts = [];
   const processedNumbers = new Set();
 
-  // Wait for WhatsApp to load
+  // Wait for WhatsApp to load - try multiple selectors
   const chatList = document.querySelector('[aria-label="Chat list"]') || 
+                   document.querySelector('[aria-label*="chat"]') ||
                    document.querySelector('div[data-testid="chat-list"]') ||
-                   document.querySelector('#pane-side');
+                   document.querySelector('#pane-side') ||
+                   document.querySelector('div[role="grid"]') ||
+                   document.querySelector('div[class*="chat-list"]');
+
+  console.log('Chat list found:', chatList);
 
   if (!chatList) {
     return {
@@ -17,28 +22,61 @@ function extractContacts() {
     };
   }
 
-  // Get all chat items
-  const chatItems = chatList.querySelectorAll('div[role="listitem"]') ||
-                    chatList.querySelectorAll('[data-testid="cell-frame-container"]');
+  // Get all chat items - try multiple selectors
+  let chatItems = chatList.querySelectorAll('div[role="listitem"]');
+  
+  if (chatItems.length === 0) {
+    chatItems = chatList.querySelectorAll('[data-testid="cell-frame-container"]');
+  }
+  
+  if (chatItems.length === 0) {
+    chatItems = chatList.querySelectorAll('div[class*="chat"]');
+  }
+  
+  if (chatItems.length === 0) {
+    // Try to find any div that looks like a chat item
+    chatItems = chatList.querySelectorAll('div > div > div');
+  }
+
+  console.log('Chat items found:', chatItems.length);
 
   if (chatItems.length === 0) {
     return {
       success: false,
-      error: 'No chats found. Make sure you have some conversations in WhatsApp.',
+      error: 'No chats found. Make sure you have some conversations in WhatsApp. Found chat list but no chat items.',
       contacts: []
     };
   }
 
   chatItems.forEach((chatItem, index) => {
     try {
-      // Extract contact name
-      const nameElement = chatItem.querySelector('span[dir="auto"][title]') ||
-                         chatItem.querySelector('span[title]') ||
-                         chatItem.querySelector('[data-testid="conversation-info-header-chat-title"]');
+      // Extract contact name - try multiple selectors
+      let nameElement = chatItem.querySelector('span[dir="auto"][title]') ||
+                       chatItem.querySelector('span[title]') ||
+                       chatItem.querySelector('[data-testid="conversation-info-header-chat-title"]') ||
+                       chatItem.querySelector('span[class*="ggj6brxn"]') ||
+                       chatItem.querySelector('div[class*="_11JPr"] span');
       
-      const name = nameElement ? nameElement.getAttribute('title') || nameElement.textContent.trim() : null;
+      let name = null;
+      
+      if (nameElement) {
+        name = nameElement.getAttribute('title') || nameElement.textContent.trim();
+      } else {
+        // Fallback: try to find any text that looks like a name
+        const allSpans = chatItem.querySelectorAll('span');
+        for (const span of allSpans) {
+          const text = span.textContent.trim();
+          if (text && text.length > 0 && text.length < 100 && !text.includes('\n')) {
+            name = text;
+            break;
+          }
+        }
+      }
 
-      if (!name) return;
+      if (!name || name.length === 0) {
+        console.log('No name found for chat item', index);
+        return;
+      }
 
       // Try to extract phone number from various sources
       let phoneNumber = null;
