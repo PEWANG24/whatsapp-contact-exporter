@@ -1,5 +1,94 @@
 let extractedContacts = [];
 
+// Runs in PAGE context (same as WhatsApp) - must be self-contained, no outer refs
+function extractInPage() {
+  function qsAllDeep(selector, root) {
+    root = root || document;
+    var result = [];
+    function walk(r) {
+      if (!r || !r.querySelectorAll) return;
+      try {
+        r.querySelectorAll(selector).forEach(function(el) { result.push(el); });
+        r.querySelectorAll('*').forEach(function(node) {
+          if (node.shadowRoot) walk(node.shadowRoot);
+        });
+      } catch (e) {}
+    }
+    walk(root);
+    return result;
+  }
+  function qsDeep(selector, root) {
+    var all = qsAllDeep(selector, root);
+    return all[0] || null;
+  }
+  var contacts = [], seen = {};
+  var chatList = document.querySelector('#pane-side') || qsDeep('#pane-side') ||
+    document.querySelector('[aria-label="Chat list"]') || qsDeep('[aria-label="Chat list"]');
+  if (!chatList) {
+    var listitems = qsAllDeep('div[role="listitem"]');
+    if (listitems.length > 0)
+      chatList = listitems[0].closest('div[role="listbox"]') || listitems[0].closest('div[role="grid"]') ||
+        (listitems[0].parentElement && listitems[0].parentElement.parentElement);
+  }
+  if (!chatList)
+    return { success: false, error: 'Chat list not found. Refresh the page and try again.', contacts: [] };
+  var chatItems = Array.from(chatList.querySelectorAll('[data-testid="cell-frame-container"]'));
+  if (chatItems.length === 0) chatItems = Array.from(qsAllDeep('[data-testid="cell-frame-container"]', chatList));
+  if (chatItems.length === 0) chatItems = Array.from(chatList.querySelectorAll('div[role="listitem"]'));
+  if (chatItems.length === 0) chatItems = Array.from(qsAllDeep('div[role="listitem"]', chatList));
+  if (chatItems.length === 0) {
+    var withTabindex = chatList.querySelectorAll('[tabindex="0"]');
+    chatItems = Array.from(withTabindex).filter(function(el) {
+      return (el.querySelector('span[dir="auto"]') || el.querySelector('[title]')) &&
+        (el.querySelector('img') || el.querySelector('canvas') || el.querySelector('span'));
+    });
+  }
+  if (chatItems.length === 0) {
+    var divs = chatList.querySelectorAll('div');
+    chatItems = Array.from(divs).filter(function(div) {
+      var hasImg = div.querySelector('img, canvas');
+      var spans = div.querySelectorAll('span');
+      var ok = false;
+      spans.forEach(function(s) {
+        var t = s.textContent.trim();
+        if (t.length >= 2 && t.length <= 80 && !/^\d{1,2}:\d{2}$/.test(t)) ok = true;
+      });
+      return hasImg && spans.length >= 1 && ok;
+    });
+  }
+  if (chatItems.length === 0)
+    return { success: false, error: 'No chats found. Make sure chats are visible and the page is fully loaded.', contacts: [] };
+  chatItems.forEach(function(chatItem, index) {
+    try {
+      var name = null;
+      var titles = chatItem.querySelectorAll('[title]');
+      for (var i = 0; i < titles.length; i++) {
+        var t = (titles[i].getAttribute('title') || '').trim();
+        if (t.length > 0 && t.length < 100 && !/^\d{1,2}:\d{2}/.test(t)) { name = t; break; }
+      }
+      if (!name) { var auto = chatItem.querySelector('span[dir="auto"]'); if (auto) name = auto.textContent.trim(); }
+      if (!name) {
+        var spans = chatItem.querySelectorAll('span');
+        for (var j = 0; j < spans.length; j++) {
+          var txt = spans[j].textContent.trim();
+          if (txt.length >= 2 && txt.length <= 80 && !/^\d{1,2}:\d{2}$/.test(txt) && !/^\d+$/.test(txt)) { name = txt; break; }
+        }
+      }
+      if (!name || seen[name]) return;
+      seen[name] = true;
+      var phone = /^\+?\d[\d\s\-\(\)]{8,}$/.test(name) ? name.replace(/\D/g, '') : null;
+      if (!phone) { var aria = chatItem.getAttribute('aria-label') || ''; var m = aria.match(/\+?\d[\d\s\-\(\)]{8,}/); if (m) phone = m[0].replace(/\D/g, ''); }
+      var lastMsgEl = chatItem.querySelector('span[dir="ltr"]') || chatItem.querySelector('[data-testid="last-msg-text"]');
+      var lastMessage = lastMsgEl ? lastMsgEl.textContent.trim().substring(0, 100) : '';
+      var timeEl = chatItem.querySelector('[data-testid="cell-frame-secondary"] span') || chatItem.querySelector('span[aria-label*="at"]');
+      var timestamp = timeEl ? timeEl.textContent.trim() : '';
+      var isGroup = !!chatItem.querySelector('[data-testid="default-group"], [data-icon="default-group"]') || /group/i.test(name);
+      contacts.push({ name: name, phoneNumber: phone || 'N/A', isGroup: isGroup, lastMessage: lastMessage, timestamp: timestamp, index: index + 1 });
+    } catch (err) {}
+  });
+  return { success: true, contacts: contacts, totalChats: chatItems.length, extractedAt: new Date().toISOString() };
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const extractBtn = document.getElementById('extractBtn');
   const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -76,8 +165,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-      // Ensure content script is loaded
-      await ensureContentScript();
+      // Scroll first if option is selected (uses content script)
+      try { await ensureContentScript(); } catch (_) {}
 
       // Scroll first if option is selected
       if (scrollFirstCheckbox.checked) {
@@ -98,18 +187,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       showStatus('Extracting contacts...', 'info');
 
+      // Run extractor in PAGE context (same as WhatsApp) so we see the real DOM
       try {
-        const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractContacts' });
-        
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: extractInPage,
+          world: 'MAIN'
+        });
+        if (chrome.runtime.lastError) {
+          showStatus('Error: ' + chrome.runtime.lastError.message, 'error');
+          resetButton();
+          return;
+        }
+        const response = results && results[0] && results[0].result;
+        if (!response) {
+          showStatus('Error: No response from page.', 'error');
+          resetButton();
+          return;
+        }
         if (!response.success) {
           showStatus('Error: ' + response.error, 'error');
           resetButton();
           return;
         }
 
-        extractedContacts = response.contacts;
+        extractedContacts = response.contacts || [];
 
-        // Filter out groups if option is unchecked
         if (!includeGroupsCheckbox.checked) {
           extractedContacts = extractedContacts.filter(contact => !contact.isGroup);
         }
@@ -124,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayResults();
         resetButton();
       } catch (error) {
-        showStatus('Error: ' + (error.message || 'Could not connect to WhatsApp Web'), 'error');
+        showStatus('Error: ' + (error.message || 'Could not extract contacts'), 'error');
         resetButton();
       }
 
