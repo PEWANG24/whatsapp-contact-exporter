@@ -1,26 +1,7 @@
 {
   "version": 2,
-  "name": "whatsapp-contact-exporter",
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/wa",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/wa/(.*)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ],
+  "public": true,
+  "outputDirectory": "public",
   "headers": [
     {
       "source": "/extension.zip",
@@ -34,6 +15,16 @@
           "value": "attachment; filename=whatsapp-contact-exporter.zip"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/wa",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wa/:path*",
+      "destination": "/:path*"
     }
   ]
 }
